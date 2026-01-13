@@ -17,7 +17,34 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import TeamViewSet, UserViewSet, ActivityViewSet, WorkoutViewSet, LeaderboardViewSet, api_root
+import os
+from django.http import JsonResponse
+from .views import TeamViewSet, UserViewSet, ActivityViewSet, WorkoutViewSet, LeaderboardViewSet
+from django.http import HttpResponse
+def homepage(request):
+    return HttpResponse('<h1>Welcome to Octofit Tracker API</h1><p>Visit <a href="/api/">/api/</a> for REST endpoints.</p>')
+
+
+# Helper to get codespace URL
+def get_codespace_url():
+    codespace_name = os.environ.get('CODESPACE_NAME', None)
+    if codespace_name:
+        return f"https://{codespace_name}-8000.app.github.dev"
+    return "http://localhost:8000"
+
+
+# Custom API root view to show endpoint URLs with correct base
+def custom_api_root(request):
+    base_url = get_codespace_url()
+    endpoints = {
+        "teams": f"{base_url}/api/teams/",
+        "users": f"{base_url}/api/users/",
+        "activities": f"{base_url}/api/activities/",
+        "workouts": f"{base_url}/api/workouts/",
+        "leaderboard": f"{base_url}/api/leaderboard/",
+    }
+    return JsonResponse(endpoints)
+
 
 router = DefaultRouter()
 router.register(r'teams', TeamViewSet)
@@ -27,7 +54,7 @@ router.register(r'workouts', WorkoutViewSet)
 router.register(r'leaderboard', LeaderboardViewSet)
 
 urlpatterns = [
+    path('', homepage, name='homepage'),
     path('admin/', admin.site.urls),
-    path('', api_root, name='api-root'),
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
 ]
